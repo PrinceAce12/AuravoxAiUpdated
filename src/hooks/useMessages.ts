@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useWebhookSettings } from './useWebhookSettings';
 
 interface Message {
   id: string;
@@ -7,9 +8,19 @@ interface Message {
   created_at: string;
 }
 
-export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'assistant') => Promise<any>) => {
+interface SaveMessageResult {
+  id: string;
+  content: string;
+  role: string;
+  conversation_id: string;
+  user_id: string;
+  created_at: string | null;
+}
+
+export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'assistant') => Promise<SaveMessageResult | null>) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { getWebhookUrl, isWebhookConfigured } = useWebhookSettings();
 
   const addMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
@@ -33,10 +44,10 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
     setIsLoading(true);
 
     try {
-      // Get the webhook URL from localStorage
-      const webhookUrl = localStorage.getItem('webhook_url');
+      // Get the webhook URL from database
+      const webhookUrl = getWebhookUrl();
       
-      if (webhookUrl) {
+      if (webhookUrl && isWebhookConfigured()) {
         // Try to call the actual webhook
         const response = await fetch(webhookUrl, {
           method: 'POST',
@@ -117,7 +128,7 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
     } finally {
       setIsLoading(false);
     }
-  }, [onSaveMessage]);
+  }, [onSaveMessage, getWebhookUrl, isWebhookConfigured]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -158,6 +169,28 @@ Here are some key insights:
 • **Best practices**: Following established patterns can save time and prevent issues
 • **Common pitfalls**: Being aware of potential challenges helps avoid them
 
+Here's a simple example:
+
+\`\`\`javascript
+function greetUser(name) {
+  return \`Hello, \${name}!\`;
+}
+
+console.log(greetUser('World'));
+\`\`\`
+
+And here's a React component example:
+
+\`\`\`jsx
+import React from 'react';
+
+const Greeting = ({ name }) => {
+  return <h1>Hello, {name}!</h1>;
+};
+
+export default Greeting;
+\`\`\`
+
 Would you like me to dive deeper into any specific aspect? I can provide more detailed explanations, code examples, or practical tips based on what you're working on.
 
 *Note: This is a fallback response. For more personalized assistance, please configure the webhook in the admin panel to connect your preferred AI service.*`,
@@ -171,46 +204,25 @@ Let me break this down for you:
 - There are several approaches you could take
 - Context matters a lot in this situation
 
+Here's a practical example:
+
+\`\`\`python
+def calculate_fibonacci(n):
+    if n <= 1:
+        return n
+    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+
+# Test the function
+for i in range(10):
+    print(f"F({i}) = {calculate_fibonacci(i)}")
+\`\`\`
+
 **My recommendation:**
 Start with the basics and build up from there. Don't try to tackle everything at once - focus on one aspect at a time.
 
 What specific part would you like to explore first? I'm here to help guide you through it step by step.
 
 *Configure your webhook in the admin panel for more advanced AI capabilities.*`,
-
-    `Great question! ${userMessage} is something many people struggle with.
-
-Here's my take on it:
-
-**The Challenge:**
-This can be complex because there are multiple factors to consider.
-
-**The Solution:**
-I'd suggest starting with a simple approach and iterating from there. Sometimes the best solution is the one you can implement quickly and improve over time.
-
-**Next Steps:**
-1. Identify your specific needs
-2. Research the options available
-3. Start with a minimal viable solution
-4. Iterate and improve
-
-What's your current situation? That would help me give you more targeted advice.
-
-*For more sophisticated AI assistance, please set up the webhook in the admin panel.*`,
-
-    `I understand you're looking into ${userMessage}. This is definitely worth exploring!
-
-**Key Considerations:**
-- Every situation is unique, so context is important
-- There's usually more than one way to approach this
-- The best solution depends on your specific requirements
-
-**My thoughts:**
-Without knowing more about your specific case, I'd recommend starting with the most straightforward approach. You can always optimize later once you have a working solution.
-
-Could you tell me more about what you're trying to achieve? That would help me provide more specific guidance.
-
-*Set up the webhook in the admin panel for enhanced AI capabilities and more detailed responses.*`,
 
     `That's a really good question about ${userMessage}! Let me share what I know.
 
@@ -224,6 +236,28 @@ Focus on understanding the core principles first. Once you have those down, the 
 - Start simple and add complexity as needed
 - Learn from others who've solved similar problems
 - Don't be afraid to experiment and iterate
+
+Here's a TypeScript example:
+
+\`\`\`typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+class UserService {
+  async getUser(id: string): Promise<User | null> {
+    try {
+      const response = await fetch(\`/api/users/\${id}\`);
+      return response.ok ? await response.json() : null;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return null;
+    }
+  }
+}
+\`\`\`
 
 What's your experience level with this? That would help me tailor my advice to be most useful for you.
 

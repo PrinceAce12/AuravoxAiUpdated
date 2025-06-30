@@ -1,19 +1,25 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, Settings, Moon, Sun } from 'lucide-react';
-import { useTheme } from '../providers/ThemeProvider';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import { Link } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-interface ChatHeaderProps {
-  onNewChat: () => void;
-  onSignIn?: () => void;
-  user?: any;
-  onSignOut?: () => void;
+interface User {
+  id: string;
+  email?: string;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ onNewChat, onSignIn, user, onSignOut }) => {
+interface ChatHeaderProps {
+  onNewChat: () => void;
+  onSignIn: () => void;
+  onSignOut: () => void;
+  user?: User | null;
+  onSettingsClick?: () => void;
+}
+
+export default function ChatHeader({ onNewChat, onSignIn, onSignOut, user, onSettingsClick }: ChatHeaderProps) {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -93,4 +99,4 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ onNewChat, onSignIn, use
       </div>
     </div>
   );
-};
+}

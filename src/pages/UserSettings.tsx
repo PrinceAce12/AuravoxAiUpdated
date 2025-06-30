@@ -12,7 +12,15 @@ import ChatLayout from '@/components/ChatLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Archive, MessageSquare, Calendar, RotateCcw, Trash2, ArrowLeft, User, Palette, Settings, LogOut } from 'lucide-react';
 
-// Types
+interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    avatar_url?: string;
+  };
+  avatar_url?: string;
+}
+
 interface Profile {
   id?: string;
   full_name: string;
@@ -21,15 +29,23 @@ interface Profile {
   updated_at?: string;
 }
 
+interface Conversation {
+  id: string;
+  title?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface UserSettingsProps {
   modal?: boolean;
   onProfileUpdate?: () => void;
+  onClose?: () => void;
 }
 
 // Profile Section Component
 const ProfileSection: React.FC<{
   profile: Profile;
-  user: any;
+  user: User | null;
   pendingAvatarUrl: string | null;
   uploading: boolean;
   uploadError: string | null;
@@ -124,11 +140,11 @@ const ProfileSection: React.FC<{
         <Button 
           onClick={onSaveProfile} 
           disabled={saving}
-          className="w-full md:w-auto"
+          className="w-full md:w-auto bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border-0 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
         >
           {saving ? (
             <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b border-gray-600 dark:border-gray-400"></div>
               Saving...
             </div>
           ) : (
@@ -190,9 +206,8 @@ const ArchiveSection: React.FC<{
         View and manage all your chat conversations
       </p>
       <Button 
-        variant="outline" 
         onClick={onViewConversations}
-        className="flex items-center gap-2"
+        className="flex items-center gap-2 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border-0 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
       >
         <Archive className="w-4 h-4" />
         View All Conversations
@@ -216,9 +231,8 @@ const AccountSection: React.FC<{
         Sign out of your account
       </p>
       <Button 
-        variant="outline" 
         onClick={onSignOut}
-        className="flex items-center gap-2 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+        className="flex items-center gap-2 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 border-0 text-red-600 hover:text-red-700"
       >
         <LogOut className="w-4 h-4" />
         Sign Out
@@ -229,7 +243,7 @@ const AccountSection: React.FC<{
 
 // Conversation Item Component
 const ConversationItem: React.FC<{
-  conversation: any;
+  conversation: Conversation;
   onRestore: (id: string) => void;
   onDelete: (id: string) => void;
 }> = ({ conversation, onRestore, onDelete }) => (
@@ -275,7 +289,7 @@ const ConversationItem: React.FC<{
 );
 
 // Main Component
-const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpdate }) => {
+const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpdate, onClose }) => {
   const [profile, setProfile] = useState<Profile>({
     full_name: '',
     email: '',
@@ -287,8 +301,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpd
   const [loading, setLoading] = useState(true);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [archivedConversations, setArchivedConversations] = useState<any[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
   const [showArchiveViewer, setShowArchiveViewer] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(false);
 
@@ -425,6 +439,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpd
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/chat');
+    onClose?.();
   };
 
   const handleNewChat = () => {
@@ -526,13 +541,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpd
       <div className="flex flex-col items-center justify-center w-full">
         <Card className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700" style={{ maxHeight: '80vh', overflow: 'hidden' }}>
           <CardHeader className="border-b border-gray-200 dark:border-gray-700">
-            <div className="flex justify-between items-center w-full">
-              <div />
-              <Avatar className="w-10 h-10 shadow-lg">
-                <AvatarImage src={pendingAvatarUrl || profile.avatar_url} alt={profile.full_name || user?.email || 'User'} />
-                <AvatarFallback>{(profile.full_name || user?.email || 'U')[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </div>
             <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">User Settings</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Manage your profile, preferences, and theme

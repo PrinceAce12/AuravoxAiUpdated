@@ -1,4 +1,3 @@
-
 export const formatMessage = (content: string): string => {
   // Convert markdown-style formatting to HTML
   let formatted = content;
@@ -40,7 +39,7 @@ export const formatMessage = (content: string): string => {
 
   // Bullet points (- item or * item)
   formatted = formatted.replace(
-    /^[\-\*] (.+)$/gm,
+    /^[-*] (.+)$/gm,
     '<li class="ml-4">$1</li>'
   );
 

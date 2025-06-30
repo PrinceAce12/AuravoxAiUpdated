@@ -13,6 +13,7 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
 
   // Always allow access to the QRScanner on the secret route
   if (location.pathname === SECRET_ADMIN_ROUTE) {
+    console.log('Accessing secret admin route, allowing access');
     return <>{children}</>;
   }
 
@@ -20,7 +21,12 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
     const access = sessionStorage.getItem('admin_access');
     const accessTime = sessionStorage.getItem('admin_access_time');
     
-    if (!access || !accessTime) return false;
+    console.log('Checking admin access:', { access, accessTime, pathname: location.pathname });
+    
+    if (!access || !accessTime) {
+      console.log('No admin access found');
+      return false;
+    }
     
     // Check if access is still valid (24 hours)
     const accessTimestamp = parseInt(accessTime);
@@ -29,18 +35,23 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
     
     if (currentTime - accessTimestamp > twentyFourHours) {
       // Clear expired access
+      console.log('Admin access expired, clearing');
       sessionStorage.removeItem('admin_access');
       sessionStorage.removeItem('admin_access_time');
       return false;
     }
     
-    return access === 'true';
+    const hasAccess = access === 'true';
+    console.log('Admin access result:', hasAccess);
+    return hasAccess;
   };
 
   if (!hasAdminAccess()) {
+    console.log('Redirecting to admin access page');
     return <Navigate to="/admin/access" replace />;
   }
 
+  console.log('Admin access granted, rendering children');
   return <>{children}</>;
 };
 

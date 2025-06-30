@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Shield, Check } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import NotFound from '@/pages/NotFound';
-
-
+import { QrCode, Shield, Check, Key } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface QRScannerProps {
   forceShow?: boolean;
@@ -14,19 +11,10 @@ interface QRScannerProps {
 const QRScanner: React.FC<QRScannerProps> = ({ forceShow = false }) => {
   const [qrInput, setQrInput] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [accessAllowed, setAccessAllowed] = useState(false);
-  const location = useLocation();
   const navigate = useNavigate();
 
   // The expected QR code content (you can modify this based on what your QR code contains)
   const ADMIN_QR_CODE = 'aura-token-secret-placeholder=(PrinceAce06...Kervee)';
-
-  useEffect(() => {
-    if (forceShow) {
-      setAccessAllowed(true);
-      return;
-    }
-  }, [forceShow]);
 
   const handleQRSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,9 +31,11 @@ const QRScanner: React.FC<QRScannerProps> = ({ forceShow = false }) => {
     }, 1000);
   };
 
-  if (!accessAllowed) {
-    return <NotFound />;
-  }
+  const handleTestAccess = () => {
+    sessionStorage.setItem('admin_access', 'true');
+    sessionStorage.setItem('admin_access_time', Date.now().toString());
+    navigate('/admin/dashboard');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900 flex items-center justify-center p-4">
@@ -94,6 +84,19 @@ const QRScanner: React.FC<QRScannerProps> = ({ forceShow = false }) => {
               )}
             </Button>
           </form>
+          
+          {/* Test Access Button for Development */}
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button 
+              onClick={handleTestAccess}
+              variant="outline"
+              className="w-full border-green-200 text-green-700 hover:bg-green-50"
+            >
+              <Key className="w-4 h-4 mr-2" />
+              Test Admin Access (Development)
+            </Button>
+          </div>
+          
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
             <p className="text-sm text-blue-700 dark:text-blue-300">
               <QrCode className="w-4 h-4 inline mr-1" />

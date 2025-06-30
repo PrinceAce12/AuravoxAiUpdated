@@ -1,20 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Database, Webhook, Shield, ArrowLeft } from 'lucide-react';
+import { Settings, Database, Webhook, Shield, ArrowLeft, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useWebhookSettings } from '@/hooks/useWebhookSettings';
+import { useToast } from '@/hooks/use-toast';
 
 const Admin = () => {
+  console.log('Admin component rendering');
+  
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  const { 
+    webhookSettings, 
+    isLoading: isLoadingSettings, 
+    error: settingsError, 
+    saveWebhookUrl, 
+    loadWebhookSettings 
+  } = useWebhookSettings();
 
-  const handleSaveWebhook = () => {
-    // TODO: Save webhook URL to Supabase settings
-    console.log('Saving webhook URL:', webhookUrl);
+  // Load saved webhook URL from database on component mount
+  useEffect(() => {
+    console.log('Admin useEffect - webhookSettings:', webhookSettings);
+    if (webhookSettings?.webhook_url) {
+      setWebhookUrl(webhookSettings.webhook_url);
+    }
+  }, [webhookSettings]);
+
+  const handleSaveWebhook = async () => {
+    if (!webhookUrl.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid webhook URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Save webhook URL to database
+      await saveWebhookUrl(webhookUrl);
+      
+      console.log('Webhook URL saved to database:', webhookUrl);
+      
+      toast({
+        title: "Success",
+        description: "Webhook URL has been saved successfully to the database",
+      });
+    } catch (error) {
+      console.error('Error saving webhook URL:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save webhook URL to database",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  console.log('Admin render - isLoadingSettings:', isLoadingSettings, 'settingsError:', settingsError);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">
+    <div className="min-h-screen h-screen overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -48,6 +100,22 @@ const Admin = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {settingsError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Error loading webhook settings: {settingsError}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={loadWebhookSettings}
+                    className="mt-2 border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Webhook URL
@@ -57,12 +125,36 @@ const Admin = () => {
                   value={webhookUrl}
                   onChange={(e) => setWebhookUrl(e.target.value)}
                   placeholder="https://your-n8n-instance.com/webhook/ai-chat"
-                  className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isLoadingSettings}
+                  className="w-full px-3 py-2 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This webhook will be called to get AI responses for user messages
+                </p>
+                {webhookSettings?.webhook_url && (
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    ✓ Webhook URL is configured and active
+                  </p>
+                )}
               </div>
-              <Button onClick={handleSaveWebhook} className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600">
-                Save Webhook URL
-              </Button>
+              
+              <div className="flex items-center space-x-3">
+                <Button 
+                  onClick={handleSaveWebhook} 
+                  disabled={isSaving || isLoadingSettings}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Webhook URL'}
+                </Button>
+                
+                {isLoadingSettings && (
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                    Loading settings...
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
