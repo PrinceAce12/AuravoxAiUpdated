@@ -538,16 +538,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpd
   // Modal view
   if (modal) {
     return (
-      <div className="flex flex-col items-center justify-center w-full">
-        <Card className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700" style={{ maxHeight: '80vh', overflow: 'hidden' }}>
-          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col items-center justify-center w-full min-h-screen h-screen overflow-y-auto sm:min-h-0 sm:h-auto sm:w-auto sm:py-8">
+        <Card
+          className="w-full h-full max-w-none bg-white dark:bg-gray-900 border-0 rounded-none shadow-none p-0 overflow-y-auto
+            sm:max-w-2xl sm:h-auto sm:rounded-2xl sm:shadow-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700 sm:my-0 sm:max-h-[80vh]"
+        >
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700 sm:rounded-t-2xl">
             <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">User Settings</CardTitle>
             <CardDescription className="text-gray-600 dark:text-gray-400">
               Manage your profile, preferences, and theme
             </CardDescription>
           </CardHeader>
-          
-          <CardContent className="space-y-8 overflow-y-auto p-6" style={{ maxHeight: 'calc(80vh - 140px)' }}>
+          <CardContent className="space-y-8 flex-1 overflow-y-auto p-6 h-full sm:h-auto" style={{ maxHeight: 'none' }}>
             <ProfileSection
               profile={profile}
               user={user}
@@ -560,14 +562,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ modal = false, onProfileUpd
               onAvatarUpload={handleAvatarUpload}
               onSaveProfile={handleSaveProfile}
             />
-            
             <ThemeSection theme={theme} onThemeChange={setTheme} />
-            
             <ArchiveSection onViewConversations={() => {
               loadArchivedConversations();
               setShowArchiveViewer(true);
             }} />
-            
             <AccountSection onSignOut={handleSignOut} />
           </CardContent>
         </Card>

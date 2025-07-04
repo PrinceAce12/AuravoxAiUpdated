@@ -7,8 +7,6 @@ import { useWebhookSettings } from '@/hooks/useWebhookSettings';
 import { useToast } from '@/hooks/use-toast';
 
 const Admin = () => {
-  console.log('Admin component rendering');
-  
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -23,7 +21,6 @@ const Admin = () => {
 
   // Load saved webhook URL from database on component mount
   useEffect(() => {
-    console.log('Admin useEffect - webhookSettings:', webhookSettings);
     if (webhookSettings?.webhook_url) {
       setWebhookUrl(webhookSettings.webhook_url);
     }
@@ -45,14 +42,11 @@ const Admin = () => {
       // Save webhook URL to database
       await saveWebhookUrl(webhookUrl);
       
-      console.log('Webhook URL saved to database:', webhookUrl);
-      
       toast({
         title: "Success",
         description: "Webhook URL has been saved successfully to the database",
       });
     } catch (error) {
-      console.error('Error saving webhook URL:', error);
       toast({
         title: "Error",
         description: "Failed to save webhook URL to database",
@@ -62,8 +56,6 @@ const Admin = () => {
       setIsSaving(false);
     }
   };
-
-  console.log('Admin render - isLoadingSettings:', isLoadingSettings, 'settingsError:', settingsError);
 
   return (
     <div className="min-h-screen h-screen overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">

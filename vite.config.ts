@@ -16,4 +16,9 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    minify: true,
+    sourcemap: false,
+    outDir: 'dist',
+  },
 }));

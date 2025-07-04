@@ -139,39 +139,45 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({ message, isLa
         const copyButton = document.createElement('button');
         copyButton.className = 'code-copy-button';
         copyButton.title = 'Copy code';
-        
+        copyButton.setAttribute('aria-label', 'Copy code');
+        copyButton.setAttribute('tabindex', '0');
         // Add click handler
         copyButton.addEventListener('click', () => {
           navigator.clipboard.writeText(codeText);
-          
           const copyIcon = copyButton.querySelector('.copy-icon');
           const checkIcon = copyButton.querySelector('.check-icon');
-          
           if (copyIcon && checkIcon) {
             copyIcon.classList.add('hidden');
             checkIcon.classList.remove('hidden');
-            
             setTimeout(() => {
               copyIcon.classList.remove('hidden');
               checkIcon.classList.add('hidden');
             }, 2000);
           }
         });
-        
+        // Keyboard accessibility
+        copyButton.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            copyButton.click();
+          }
+        });
         // Make pre element relative and add button
         const preElement = pre as HTMLElement;
         preElement.style.position = 'relative';
         preElement.style.overflow = 'visible';
         pre.appendChild(copyButton);
-        
         // Add hover event listeners for better control
         preElement.addEventListener('mouseenter', () => {
           copyButton.style.opacity = '1';
         });
-        
         preElement.addEventListener('mouseleave', () => {
-          copyButton.style.opacity = '0.3';
+          copyButton.style.opacity = window.matchMedia('(max-width: 640px)').matches ? '0.5' : '0.3';
         });
+        // Always visible on mobile
+        if (window.matchMedia('(max-width: 640px)').matches) {
+          copyButton.style.opacity = '0.5';
+        }
       });
     }
   }, [formattedContent, isUser, message.id]);
@@ -192,8 +198,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({ message, isLa
           {!isUser && (
             <button
               onClick={copyEntireResponse}
-              className="absolute top-1 right-1 ml-2 p-1 z-10 touch-manipulation shadow-none bg-transparent border-none hover:bg-transparent focus:bg-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 ml-2 p-1 z-10 touch-manipulation shadow-none bg-transparent border-none hover:bg-transparent focus:bg-transparent transition-opacity
+                opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-100"
               title="Copy entire response"
+              aria-label="Copy entire response"
+              tabIndex={0}
+              style={{
+                ...(window.matchMedia && window.matchMedia('(max-width: 640px)').matches
+                  ? {
+                      right: 0, // flush to the edge
+                      top: 0,   // flush to the edge
+                      marginRight: 0,
+                      marginTop: 0,
+                    }
+                  : {}),
+                // Always add 1px margin between icon and text
+                marginLeft: '1px',
+                marginBottom: '1px',
+              }}
             >
               {isResponseCopied ? (
                 <Check className="w-4 h-4 text-green-600 dark:text-green-400" />

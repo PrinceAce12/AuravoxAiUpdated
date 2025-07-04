@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo, useMemo } from 'react';
+import React, { useState, useCallback, memo, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
 
@@ -24,8 +24,20 @@ interface ChatInputProps {
   messages?: Message[];
 }
 
-export const ChatInput: React.FC<ChatInputProps> = memo(({ onSendMessage, disabled, user, onShowAuthModal, isLoading = false, placeholder = "Type your message...", messages = [] }) => {
+export interface ChatInputRef {
+  focus: () => void;
+}
+
+export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessage, disabled, user, onShowAuthModal, isLoading = false, placeholder = "Type your message...", messages = [] }, ref) => {
   const [message, setMessage] = useState('');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Expose focus method to parent component
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textareaRef.current?.focus();
+    }
+  }));
 
   // Memoize placeholder text
   const placeholderText = useMemo(() => {
@@ -75,6 +87,7 @@ export const ChatInput: React.FC<ChatInputProps> = memo(({ onSendMessage, disabl
     >
       <div className="flex-1">
         <textarea
+          ref={textareaRef}
           value={message}
           onChange={handleMessageChange}
           onKeyDown={handleKeyDown}

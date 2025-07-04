@@ -12,22 +12,32 @@ CREATE TABLE IF NOT EXISTS public.webhook_settings (
 -- Enable Row Level Security
 ALTER TABLE public.webhook_settings ENABLE ROW LEVEL SECURITY;
 
--- Create policies for webhook settings
--- Only authenticated users can view webhook settings
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Authenticated users can view webhook settings" ON public.webhook_settings;
+DROP POLICY IF EXISTS "Authenticated users can insert webhook settings" ON public.webhook_settings;
+DROP POLICY IF EXISTS "Authenticated users can update webhook settings" ON public.webhook_settings;
+DROP POLICY IF EXISTS "Authenticated users can delete webhook settings" ON public.webhook_settings;
+
+-- Create more permissive policies for webhook settings
+-- Allow service role to perform all operations
+CREATE POLICY "Service role can manage webhook settings" ON public.webhook_settings
+    FOR ALL USING (auth.role() = 'service_role');
+
+-- Allow authenticated users to view webhook settings
 CREATE POLICY "Authenticated users can view webhook settings" ON public.webhook_settings
-    FOR SELECT USING (auth.role() = 'authenticated');
+    FOR SELECT USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
 
--- Only authenticated users can insert webhook settings
+-- Allow authenticated users to insert webhook settings
 CREATE POLICY "Authenticated users can insert webhook settings" ON public.webhook_settings
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated' OR auth.role() = 'service_role');
 
--- Only authenticated users can update webhook settings
+-- Allow authenticated users to update webhook settings
 CREATE POLICY "Authenticated users can update webhook settings" ON public.webhook_settings
-    FOR UPDATE USING (auth.role() = 'authenticated');
+    FOR UPDATE USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
 
--- Only authenticated users can delete webhook settings
+-- Allow authenticated users to delete webhook settings
 CREATE POLICY "Authenticated users can delete webhook settings" ON public.webhook_settings
-    FOR DELETE USING (auth.role() = 'authenticated');
+    FOR DELETE USING (auth.role() = 'authenticated' OR auth.role() = 'service_role');
 
 -- Create function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION public.update_webhook_settings_updated_at()

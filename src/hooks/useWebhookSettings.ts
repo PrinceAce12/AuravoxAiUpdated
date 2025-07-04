@@ -51,7 +51,6 @@ export const useWebhookSettings = () => {
         setWebhookSettings(data);
       }
     } catch (err: any) {
-      console.error('Error loading webhook settings:', err);
       setError(err.message || 'Failed to load webhook settings');
     } finally {
       setIsLoading(false);
@@ -86,6 +85,7 @@ export const useWebhookSettings = () => {
           .from('webhook_settings')
           .update({
             webhook_url: webhookUrl,
+            is_active: true,
             updated_at: new Date().toISOString(),
           })
           .eq('id', settingsId)
@@ -97,7 +97,6 @@ export const useWebhookSettings = () => {
         return updatedSettings;
       }
     } catch (err: any) {
-      console.error('Error saving webhook URL:', err);
       setError(err.message || 'Failed to save webhook URL');
       throw err;
     } finally {
@@ -107,12 +106,14 @@ export const useWebhookSettings = () => {
 
   // Get the current webhook URL
   const getWebhookUrl = useCallback(() => {
-    return webhookSettings?.webhook_url || null;
+    const url = webhookSettings?.webhook_url || null;
+    return url;
   }, [webhookSettings]);
 
   // Check if webhook is configured
   const isWebhookConfigured = useCallback(() => {
-    return !!(webhookSettings?.webhook_url && webhookSettings.is_active);
+    const configured = !!(webhookSettings?.webhook_url && webhookSettings.is_active);
+    return configured;
   }, [webhookSettings]);
 
   // Load settings on mount

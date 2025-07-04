@@ -171,16 +171,16 @@ export default function ChatLayout({ children, onNewChat, onSignIn, user, onSign
 
       {/* Sidebar */}
       <aside
-        className={`h-full flex flex-col transition-all duration-300 ease-in-out border-r border-transparent shadow-sm ${sidebarBg} ${
+        className={`h-full flex flex-col border-r border-transparent shadow-sm ${sidebarBg} ${
           isMobile 
-            ? (sidebarOpen ? 'w-80 max-w-[85vw]' : 'w-0 -translate-x-full') 
+            ? `fixed left-0 top-0 z-50 mobile-sidebar transform transition-transform transition-opacity duration-300 ease ${sidebarOpen ? 'translate-x-0 opacity-100 w-[50vw] max-w-[50vw]' : '-translate-x-full opacity-0 w-[50vw] max-w-[50vw]'}`
             : (sidebarOpen ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED)
         } ${
-          isMobile ? 'fixed left-0 top-0 z-50 mobile-sidebar' : 'relative'
+          isMobile ? '' : 'relative'
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-4 h-12 sm:h-14">
+        <div className={`flex items-center h-12 sm:h-14 ${(!isMobile && !sidebarOpen) ? 'justify-start items-center mr-2 sm:mr-3 md:mr-2 lg:mr-5' : 'justify-between px-4'}`}>
           {/* Logo/Icon (always left on desktop, only when open on mobile) */}
           {(!isMobile && sidebarOpen) || (isMobile && sidebarOpen) ? (
             <div className="w-6 h-6 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 flex items-center justify-center">
@@ -200,7 +200,7 @@ export default function ChatLayout({ children, onNewChat, onSignIn, user, onSign
           {/* Toggle Button (always right) */}
           {(!isMobile || (isMobile && sidebarOpen)) && (
             <button
-              className="w-8 h-8 flex items-center justify-center transition-colors duration-200 group"
+              className={`w-8 h-8 flex items-center justify-center transition-colors duration-200 group`}
               onClick={() => setSidebarOpen((open) => !open)}
               aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
               tabIndex={0}
@@ -421,8 +421,24 @@ export default function ChatLayout({ children, onNewChat, onSignIn, user, onSign
         </div>
       </main>
       <Dialog open={showSettings} onOpenChange={handleSettingsClose}>
-        <DialogContent className="max-w-2xl w-full p-0 bg-transparent border-0 shadow-none">
-          <UserSettings modal={true} onProfileUpdate={loadUserProfile} onClose={() => handleSettingsClose(false)} />
+        <DialogContent
+          className="max-w-2xl w-full p-0 bg-transparent border-0 shadow-none sm:rounded-lg sm:my-8 sm:max-h-[90vh]"
+        >
+          <div className="relative h-full w-full min-h-[100dvh] sm:min-h-0 sm:h-auto sm:w-auto">
+            {/* Close button inside the card for settings modal */}
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => handleSettingsClose(false)}
+              className="absolute right-4 top-4 z-10 rounded-full opacity-80 ring-offset-background transition-opacity hover:opacity-100 w-10 h-10 flex items-center justify-center sm:w-8 sm:h-8 sm:right-4 sm:top-4 right-2 top-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow"
+              style={{ touchAction: 'manipulation' }}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="h-full w-full flex flex-col items-center justify-center sm:items-stretch sm:justify-start overflow-y-auto sm:overflow-visible">
+              <UserSettings modal={true} onProfileUpdate={loadUserProfile} onClose={() => handleSettingsClose(false)} />
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

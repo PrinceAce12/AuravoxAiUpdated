@@ -9,8 +9,6 @@ import { useWebhookRealtime } from '@/hooks/useWebhookRealtime';
 import AdminMonitoring from './admin/AdminMonitoring';
 
 const AdminDashboard = () => {
-  console.log('AdminDashboard component rendering');
-  
   const [activeTab, setActiveTab] = useState<'monitoring' | 'settings'>('monitoring');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
@@ -39,7 +37,6 @@ const AdminDashboard = () => {
 
   // Load saved webhook URL from database on component mount
   useEffect(() => {
-    console.log('AdminDashboard useEffect - webhookSettings:', webhookSettings);
     if (webhookSettings?.webhook_url) {
       setWebhookUrl(webhookSettings.webhook_url);
     }
@@ -64,14 +61,11 @@ const AdminDashboard = () => {
       // Update real-time webhook service
       await updateRealtimeWebhook(webhookUrl, true);
       
-      console.log('Webhook URL saved to database:', webhookUrl);
-      
       toast({
         title: "Success",
         description: "Webhook URL has been saved successfully to the database",
       });
     } catch (error) {
-      console.error('Error saving webhook URL:', error);
       toast({
         title: "Error",
         description: "Failed to save webhook URL to database",
@@ -112,8 +106,6 @@ const AdminDashboard = () => {
     sessionStorage.removeItem('admin_access_time');
     navigate('/chat');
   };
-
-  console.log('AdminDashboard render - activeTab:', activeTab, 'isLoadingSettings:', isLoadingSettings);
 
   return (
     <div className="min-h-screen h-screen overflow-y-auto bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">

@@ -22,6 +22,35 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
   const [isLoading, setIsLoading] = useState(false);
   const { getWebhookUrl, isWebhookConfigured } = useWebhookSettings();
 
+  // Function to clean and validate AI responses
+  const cleanAIResponse = (content: string): string => {
+    let cleaned = content;
+    
+    // Fix common PHP issues
+    // If we see ?> without <?php, add the opening tag
+    if (cleaned.includes('?>') && !cleaned.includes('<?php') && !cleaned.includes('<?=')) {
+      // Find code blocks and fix them
+      cleaned = cleaned.replace(
+        /```(\w+)?\n?([\s\S]*?)```/g,
+        (match, language, code) => {
+          if ((language === 'php' || language === '') && code.includes('?>') && !code.includes('<?php') && !code.includes('<?=')) {
+            code = '<?php\n' + code;
+          }
+          return `\`\`\`${language || 'php'}\n${code}\n\`\`\``;
+        }
+      );
+    }
+    
+    // Ensure code blocks are properly closed
+    const codeBlockCount = (cleaned.match(/```/g) || []).length;
+    if (codeBlockCount % 2 !== 0) {
+      // Add missing closing ```
+      cleaned += '\n```';
+    }
+    
+    return cleaned;
+  };
+
   const addMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -46,8 +75,11 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
     try {
       // Get the webhook URL from database
       const webhookUrl = getWebhookUrl();
+      console.log('Webhook URL:', webhookUrl);
+      console.log('Is webhook configured:', isWebhookConfigured());
       
       if (webhookUrl && isWebhookConfigured()) {
+        console.log('Calling webhook with message:', content);
         // Try to call the actual webhook
         const response = await fetch(webhookUrl, {
           method: 'POST',
@@ -61,16 +93,33 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
           }),
         });
 
+        console.log('Webhook response status:', response.status);
+        console.log('Webhook response ok:', response.ok);
+
         if (response.ok) {
           const data = await response.json();
-          const aiResponseContent = data.ai_response || data.response || data.message || "I received your message but couldn't generate a proper response.";
+          console.log('Webhook response data:', data);
+          
+          const aiResponseContent = data.output || data.response || data.message || "I received your message but couldn't generate a proper response.";
+          console.log('AI response content:', aiResponseContent);
+          
+          // Clean the AI response before displaying
+          const cleanedContent = cleanAIResponse(aiResponseContent);
+          
           const aiResponse: Message = {
             id: `ai-${Date.now()}`,
-            content: aiResponseContent,
+            content: cleanedContent,
             role: 'assistant',
             created_at: new Date().toISOString()
           };
-          setMessages(prev => [...prev, aiResponse]);
+          console.log('AI response object:', aiResponse);
+          
+          setMessages(prev => {
+            console.log('Previous messages:', prev);
+            const newMessages = [...prev, aiResponse];
+            console.log('New messages array:', newMessages);
+            return newMessages;
+          });
           
           // Save AI response to database if callback provided
           if (onSaveMessage) {
@@ -81,16 +130,19 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
             }
           }
         } else {
+          console.error('Webhook returned error status:', response.status);
           throw new Error(`Webhook returned status: ${response.status}`);
         }
       } else {
+        console.log('No webhook configured, using fallback response');
         // Fallback to mock response if no webhook is configured
         await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
         
         const mockResponseContent = generateMockResponse(content);
+        const cleanedContent = cleanAIResponse(mockResponseContent);
         const aiResponse: Message = {
           id: `ai-${Date.now()}`,
-          content: mockResponseContent,
+          content: cleanedContent,
           role: 'assistant',
           created_at: new Date().toISOString()
         };
@@ -109,9 +161,10 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
     } catch (error) {
       console.error('Error getting AI response:', error);
       const errorMessageContent = "I'm sorry, I'm having trouble responding right now. Please check your internet connection or try again later.";
+      const cleanedContent = cleanAIResponse(errorMessageContent);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
-        content: errorMessageContent,
+        content: cleanedContent,
         role: 'assistant',
         created_at: new Date().toISOString()
       };
@@ -191,6 +244,18 @@ const Greeting = ({ name }) => {
 export default Greeting;
 \`\`\`
 
+Here's a PHP example with proper tags:
+
+\`\`\`php
+<?php
+function greetUser($name) {
+    return "Hello, " . $name . "!";
+}
+
+echo greetUser("World");
+?>
+\`\`\`
+
 Would you like me to dive deeper into any specific aspect? I can provide more detailed explanations, code examples, or practical tips based on what you're working on.
 
 *Note: This is a fallback response. For more personalized assistance, please configure the webhook in the admin panel to connect your preferred AI service.*`,
@@ -215,6 +280,24 @@ def calculate_fibonacci(n):
 # Test the function
 for i in range(10):
     print(f"F({i}) = {calculate_fibonacci(i)}")
+\`\`\`
+
+And here's a PHP example:
+
+\`\`\`php
+<?php
+function calculateFibonacci($n) {
+    if ($n <= 1) {
+        return $n;
+    }
+    return calculateFibonacci($n - 1) + calculateFibonacci($n - 2);
+}
+
+// Test the function
+for ($i = 0; $i < 10; $i++) {
+    echo "F($i) = " . calculateFibonacci($i) . "\n";
+}
+?>
 \`\`\`
 
 **My recommendation:**
@@ -257,6 +340,38 @@ class UserService {
     }
   }
 }
+\`\`\`
+
+And here's a PHP equivalent:
+
+\`\`\`php
+<?php
+class User {
+    public string $id;
+    public string $name;
+    public string $email;
+}
+
+class UserService {
+    public function getUser(string $id): ?User {
+        try {
+            $response = file_get_contents("/api/users/$id");
+            if ($response !== false) {
+                $data = json_decode($response, true);
+                $user = new User();
+                $user->id = $data['id'];
+                $user->name = $data['name'];
+                $user->email = $data['email'];
+                return $user;
+            }
+            return null;
+        } catch (Exception $error) {
+            error_log('Error fetching user: ' . $error->getMessage());
+            return null;
+        }
+    }
+}
+?>
 \`\`\`
 
 What's your experience level with this? That would help me tailor my advice to be most useful for you.

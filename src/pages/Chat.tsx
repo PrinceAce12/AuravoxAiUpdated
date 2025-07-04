@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { MessageList } from '../components/chat/MessageList';
-import { ChatInput } from '../components/chat/ChatInput';
+import { ChatInput, ChatInputRef } from '../components/chat/ChatInput';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ const Chat = memo(() => {
     user && currentConversationId ? saveMessage : undefined
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<ChatInputRef>(null);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
@@ -131,6 +132,11 @@ const Chat = memo(() => {
       scrollToBottom();
     }, 100);
 
+    // Focus the input field after sending
+    setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 150);
+
     // Update conversation title with first message if it's still "New Chat"
     const currentConv = conversations.find(c => c.id === conversationId);
     if (conversationId && user && currentConv?.title === 'New Chat') {
@@ -193,22 +199,17 @@ const Chat = memo(() => {
   }, [conversations, setCurrentConversationId, clearMessages, messages, user, createConversation]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
-    if (user) {
-      setCurrentConversationId(conversationId);
-      const conversationMessages = await loadMessages(conversationId);
-      
-      // Convert ChatMessage format to Message format for the UI
-      const uiMessages = conversationMessages.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        role: msg.role,
-        created_at: msg.created_at
-      }));
-      
-      // Update the messages in the UI
-      setMessagesDirectly(uiMessages);
-    }
-  }, [user, setCurrentConversationId, loadMessages, setMessagesDirectly]);
+    setCurrentConversationId(conversationId);
+    const conversationMessages = await loadMessages(conversationId);
+    // Convert ChatMessage format to Message format for the UI
+    const uiMessages = conversationMessages.map(msg => ({
+      id: msg.id,
+      content: msg.content,
+      role: msg.role,
+      created_at: msg.created_at
+    }));
+    setMessagesDirectly(uiMessages);
+  }, [setCurrentConversationId, loadMessages, setMessagesDirectly]);
 
   const handleDeleteConversation = useCallback(async (conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);
@@ -351,7 +352,7 @@ const Chat = memo(() => {
       <div className="h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">
         <div className="h-full flex flex-col p-4 max-w-6xl mx-auto w-full">
           <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
-            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md mx-4">
+            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md">
               {showVerifyEmail ? (
                 <div className="flex flex-col items-center text-center py-6 sm:py-8 px-6 sm:px-8">
                   <div className="mb-4">
@@ -445,7 +446,7 @@ const Chat = memo(() => {
           
           {/* Rename Dialog */}
           <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
-            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md mx-4">
+            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md">
               <div className="flex flex-col items-center px-6 sm:px-8 py-6 sm:py-8">
                 <DialogHeader className="w-full">
                   <DialogTitle className="text-lg sm:text-xl font-bold text-center mb-1">
@@ -488,7 +489,7 @@ const Chat = memo(() => {
 
           {/* Delete Confirmation Dialog */}
           <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <DialogContent className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl border-0 p-0 max-w-md mx-4 overflow-hidden">
+            <DialogContent className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl border-0 p-0 max-w-md">
               <div className="flex flex-col">
                 {/* Header with warning icon */}
                 <div className="flex items-center justify-center p-6 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-b border-red-100 dark:border-red-800/30">
@@ -548,7 +549,7 @@ const Chat = memo(() => {
 
           {/* Archive Confirmation Dialog */}
           <Dialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
-            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md mx-4">
+            <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md">
               <div className="flex flex-col items-center px-6 sm:px-8 py-6 sm:py-8">
                 <DialogHeader className="w-full">
                   <DialogTitle className="text-lg sm:text-xl font-bold text-center mb-1">
@@ -581,6 +582,11 @@ const Chat = memo(() => {
           <div className="flex-1 flex flex-col min-h-0">
             <div className="max-w-4xl mx-auto h-full flex flex-col w-full px-3 sm:px-4">
               <div className="flex-1 overflow-y-auto min-h-0">
+                {messages.length === 0 && !isLoading && (
+                  <div className="text-center text-gray-400 py-8">
+                    Let's have a chat!
+                  </div>
+                )}
                 <MessageList 
                   messages={messages} 
                   isLoading={isLoading}
@@ -592,6 +598,7 @@ const Chat = memo(() => {
               </div>
               <div className="mt-4 sm:mt-6 pb-4 sm:pb-6">
                 <ChatInput 
+                  ref={chatInputRef}
                   onSendMessage={handleSendMessage} 
                   disabled={isLoading} 
                   user={user}
