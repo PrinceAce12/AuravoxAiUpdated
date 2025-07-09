@@ -9,9 +9,6 @@ import {
   TrendingUp, 
   Activity, 
   RefreshCw, 
-  BarChart3,
-  Clock,
-  Calendar,
   UserCheck,
   UserPlus,
   ArrowUpRight,
@@ -74,36 +71,6 @@ const AdminMonitoring = () => {
           <div className={`w-12 h-12 rounded-lg bg-gradient-to-r from-${color}-500 to-${color}-600 flex items-center justify-center`}>
             <Icon className="w-6 h-6 text-white" />
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const ActivityChart = ({ data, title, type }: { data: Array<{ hour?: string; date?: string; count: number }>; title: string; type: 'hourly' | 'daily' }) => (
-    <Card className="glass-card border-0">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <BarChart3 className="w-5 h-5" />
-          <span>{title}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-end space-x-1 h-32">
-          {data.map((item, index) => {
-            const maxCount = Math.max(...data.map(d => d.count));
-            const height = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div 
-                  className="w-full bg-gradient-to-t from-blue-500 to-cyan-500 rounded-t"
-                  style={{ height: `${height}%` }}
-                />
-                <span className="text-xs text-gray-500 mt-1">
-                  {type === 'hourly' ? item.hour : item.date}
-                </span>
-              </div>
-            );
-          })}
         </div>
       </CardContent>
     </Card>
@@ -206,7 +173,7 @@ const AdminMonitoring = () => {
             title="Messages Today"
             value={messageStats.messagesToday}
             description="Messages sent today"
-            icon={Clock}
+            icon={MessageSquare}
             color="cyan"
           />
           <StatCard
@@ -225,22 +192,8 @@ const AdminMonitoring = () => {
           />
         </div>
 
-        {/* Activity Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <ActivityChart
-            data={activityData.hourlyActivity}
-            title="Today's Hourly Activity"
-            type="hourly"
-          />
-          <ActivityChart
-            data={activityData.dailyActivity}
-            title="Last 7 Days Activity"
-            type="daily"
-          />
-        </div>
-
         {/* Top Active Users */}
-        <Card className="glass-card border-0">
+        <Card className="glass-card border-0 mb-8">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Users className="w-5 h-5" />
@@ -277,7 +230,7 @@ const AdminMonitoring = () => {
         </Card>
 
         {/* Additional Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="glass-card border-0">
             <CardHeader>
               <CardTitle className="text-lg">Weekly Overview</CardTitle>

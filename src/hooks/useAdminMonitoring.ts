@@ -29,8 +29,6 @@ export interface ConversationStats {
 }
 
 export interface ActivityData {
-  hourlyActivity: Array<{ hour: string; count: number }>;
-  dailyActivity: Array<{ date: string; count: number }>;
   topActiveUsers: Array<{ user_id: string; email: string; message_count: number }>;
 }
 
@@ -70,8 +68,6 @@ export const useAdminMonitoring = () => {
       averageConversationLength: 0,
     },
     activityData: {
-      hourlyActivity: [],
-      dailyActivity: [],
       topActiveUsers: [],
     },
     isLoading: true,
@@ -152,35 +148,6 @@ export const useAdminMonitoring = () => {
           };
         });
 
-      // Generate hourly activity for today
-      const hourlyActivity = Array.from({ length: 24 }, (_, i) => {
-        const hourStart = new Date(today.getTime() + i * 60 * 60 * 1000);
-        const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000);
-        const count = messages?.filter(m => {
-          const messageTime = new Date(m.created_at!);
-          return messageTime >= hourStart && messageTime < hourEnd;
-        }).length || 0;
-        return {
-          hour: `${i.toString().padStart(2, '0')}:00`,
-          count,
-        };
-      });
-
-      // Generate daily activity for the last 7 days
-      const dailyActivity = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const dateEnd = new Date(dateStart.getTime() + 24 * 60 * 60 * 1000);
-        const count = messages?.filter(m => {
-          const messageTime = new Date(m.created_at!);
-          return messageTime >= dateStart && messageTime < dateEnd;
-        }).length || 0;
-        return {
-          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          count,
-        };
-      }).reverse();
-
       setData({
         userStats: {
           totalUsers,
@@ -207,8 +174,6 @@ export const useAdminMonitoring = () => {
           averageConversationLength,
         },
         activityData: {
-          hourlyActivity,
-          dailyActivity,
           topActiveUsers,
         },
         isLoading: false,
@@ -225,7 +190,55 @@ export const useAdminMonitoring = () => {
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchMonitoringData();
+
+    // Set up real-time subscription for messages
+    const messagesSubscription = supabase
+      .channel('admin-monitoring-messages')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'messages' }, 
+        () => {
+          // Refresh data when messages change
+          fetchMonitoringData();
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for profiles
+    const profilesSubscription = supabase
+      .channel('admin-monitoring-profiles')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'profiles' }, 
+        () => {
+          // Refresh data when profiles change
+          fetchMonitoringData();
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for conversations
+    const conversationsSubscription = supabase
+      .channel('admin-monitoring-conversations')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'conversations' }, 
+        () => {
+          // Refresh data when conversations change
+          fetchMonitoringData();
+        }
+      )
+      .subscribe();
+
+    // Auto-refresh every 30 seconds as backup
+    const interval = setInterval(fetchMonitoringData, 30000);
+
+    return () => {
+      // Cleanup subscriptions
+      messagesSubscription.unsubscribe();
+      profilesSubscription.unsubscribe();
+      conversationsSubscription.unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   return {

@@ -57,6 +57,7 @@ const Chat = memo(() => {
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showVerifyEmail, setShowVerifyEmail] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [renamingConversation, setRenamingConversation] = useState<Conversation | null>(null);
@@ -282,11 +283,19 @@ const Chat = memo(() => {
   const handleSignIn = () => {
     setShowAuthModal(true);
     setAuthMode('sign-in');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setAuthError(null);
   };
 
   const handleSignUp = () => {
     setShowAuthModal(true);
     setAuthMode('sign-up');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setAuthError(null);
   };
 
   const handleSignOut = async () => {
@@ -300,6 +309,19 @@ const Chat = memo(() => {
 
   const handleAuth = async () => {
     setAuthError(null);
+    
+    // Validate passwords match for sign-up
+    if (authMode === 'sign-up' && password !== confirmPassword) {
+      setAuthError('Passwords do not match');
+      return;
+    }
+    
+    // Validate password length for sign-up
+    if (authMode === 'sign-up' && password.length < 6) {
+      setAuthError('Password must be at least 6 characters long');
+      return;
+    }
+    
     if (authMode === 'sign-in') {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setAuthError(error.message);
@@ -341,7 +363,15 @@ const Chat = memo(() => {
     >
       <div className="h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-900">
         <div className="h-full flex flex-col p-4 max-w-6xl mx-auto w-full">
-          <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+          <Dialog open={showAuthModal} onOpenChange={(open) => {
+            setShowAuthModal(open);
+            if (!open) {
+              setEmail('');
+              setPassword('');
+              setConfirmPassword('');
+              setAuthError(null);
+            }
+          }}>
             <DialogContent className="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border-0 p-0 max-w-md">
               {showVerifyEmail ? (
                 <div className="flex flex-col items-center text-center py-6 sm:py-8 px-6 sm:px-8">
@@ -400,6 +430,16 @@ const Chat = memo(() => {
                       autoComplete={authMode === 'sign-in' ? 'current-password' : 'new-password'}
                       className="h-12 text-base px-4 border-gray-300 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
                     />
+                    {authMode === 'sign-up' && (
+                      <Input
+                        type="password"
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                        className="h-12 text-base px-4 border-gray-300 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
+                      />
+                    )}
                     <Button type="submit" className="w-full h-12 text-base font-semibold mt-2 touch-manipulation">
                       {authMode === 'sign-in' ? 'Sign in' : 'Sign up'}
                     </Button>
