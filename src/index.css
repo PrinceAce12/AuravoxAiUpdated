@@ -1,0 +1,466 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.75rem;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 222.2 84% 4.9%;
+  --sidebar-primary: 221.2 83.2% 53.3%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 210 40% 96%;
+  --sidebar-accent-foreground: 222.2 84% 4.9%;
+  --sidebar-border: 214.3 31.8% 91.4%;
+  --sidebar-ring: 221.2 83.2% 53.3%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 240 10% 3.9%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 217.2 91.2% 59.8%;
+  --sidebar-background: 240 10% 3.9%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-primary: 217.2 91.2% 59.8%;
+  --sidebar-primary-foreground: 240 10% 3.9%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  font-variation-settings: 'opsz' 32;
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  @apply backdrop-blur-xl bg-white/10 dark:bg-gray-900/20 border border-white/20 dark:border-gray-700/30 shadow-2xl dark:shadow-[0_0_24px_4px_rgba(99,102,241,0.3)];
+}
+
+.glass-message-bubble {
+  @apply backdrop-blur-lg rounded-2xl p-4 border border-slate-300/30 dark:border-gray-700/30;
+}
+
+.user-bubble {
+  @apply bg-gradient-to-r from-blue-500/30 to-purple-600/30 ml-auto dark:from-blue-600/50 dark:to-purple-700/50;
+}
+
+.assistant-bubble {
+  @apply bg-white/95 dark:bg-gray-800/60;
+}
+
+/* Code Styling */
+.code-block {
+  @apply bg-gray-900 dark:bg-gray-950 text-gray-100 p-4 rounded-lg overflow-x-auto my-3 border border-gray-700 dark:border-gray-600;
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  position: relative !important;
+}
+
+/* Override any prose styles that might affect positioning */
+.prose pre.code-block {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.prose pre.code-block .code-copy-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  border-radius: 6px !important;
+  background-color: rgba(55, 65, 81, 0.9) !important;
+  border: 1px solid rgba(75, 85, 99, 0.6) !important;
+  transition: all 0.2s ease !important;
+  z-index: 10 !important;
+  opacity: 0.3 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.code-block .code-copy-button {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  border-radius: 6px !important;
+  background-color: rgba(55, 65, 81, 0.9) !important;
+  border: 1px solid rgba(75, 85, 99, 0.6) !important;
+  transition: all 0.2s ease !important;
+  z-index: 10 !important;
+  opacity: 0.3 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.code-block:hover .code-copy-button,
+.prose pre.code-block:hover .code-copy-button {
+  opacity: 1 !important;
+}
+
+.code-block .code-copy-button:hover,
+.prose pre.code-block .code-copy-button:hover {
+  background-color: rgba(55, 65, 81, 1) !important;
+  border-color: rgba(75, 85, 99, 0.8) !important;
+  transform: scale(1.05) !important;
+}
+
+.code-block .code-copy-button .copy-icon,
+.code-block .code-copy-button .check-icon,
+.prose pre.code-block .code-copy-button .copy-icon,
+.prose pre.code-block .code-copy-button .check-icon {
+  width: 16px !important;
+  height: 16px !important;
+  color: #d1d5db !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+.code-block .code-copy-button .check-icon,
+.prose pre.code-block .code-copy-button .check-icon {
+  color: #34d399 !important;
+}
+
+.code-block .code-copy-button .check-icon.hidden,
+.prose pre.code-block .code-copy-button .check-icon.hidden {
+  display: none !important;
+}
+
+.inline-code {
+  @apply bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-sm border border-gray-300 dark:border-gray-600;
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+/* Clean, modern scrollbar styles */
+html, body, .custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc; /* thumb, track for light mode */
+}
+
+.dark html, .dark body, .dark .custom-scrollbar {
+  scrollbar-color: #334155 #0f172a; /* thumb, track for dark mode */
+}
+
+/* Webkit browsers */
+html::-webkit-scrollbar, body::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html::-webkit-scrollbar-track, body::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+}
+html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover, .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark html::-webkit-scrollbar-track, .dark body::-webkit-scrollbar-track, .dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+.dark html::-webkit-scrollbar-thumb, .dark body::-webkit-scrollbar-thumb, .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark html::-webkit-scrollbar-thumb:hover, .dark body::-webkit-scrollbar-thumb:hover, .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Typing Animation */
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4b5563;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+}
+
+/* PWA and Mobile Enhancements */
+@media (max-width: 768px) {
+  .glass-card {
+    @apply mx-2;
+  }
+  
+  .glass-message-bubble {
+    @apply mx-1;
+  }
+}
+
+/* Touch-friendly buttons on mobile */
+@media (pointer: coarse) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Message bubble and avatar alignment fixes */
+.message-bubble-container {
+  @apply flex items-start space-x-2 sm:space-x-3 min-w-0 px-1 sm:px-2 py-0.5 sm:py-1;
+  contain: layout style paint;
+}
+
+.message-bubble-container.user-message {
+  @apply flex-row-reverse space-x-reverse;
+}
+
+.message-avatar {
+  @apply flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 shadow-md mt-1;
+  contain: layout style paint;
+}
+
+.message-content {
+  @apply flex-1 min-w-0 max-w-[90%] sm:max-w-[80%] lg:max-w-[75%];
+  contain: layout style paint;
+}
+
+.message-content.user-content {
+  @apply flex flex-col items-end;
+}
+
+/* Prevent layout shifts during typewriter animation */
+.typewriter-content {
+  min-height: 1.2em;
+  contain: layout style paint;
+}
+
+/* Ensure consistent avatar positioning */
+.avatar-container {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Smooth transitions for avatar changes */
+.avatar-transition {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Prevent content jumping during loading */
+.message-loading {
+  min-height: 60px;
+  contain: layout style paint;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  .glass-card {
+    @apply backdrop-blur-lg bg-white/20 dark:bg-gray-900/30 border border-white/30 dark:border-gray-700/40 shadow-xl;
+  }
+
+  .glass-message-bubble {
+    @apply backdrop-blur-md rounded-xl p-3 border border-slate-300/40 dark:border-gray-700/40;
+  }
+
+  /* Improve touch targets on mobile */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better mobile spacing */
+  .message-bubble-container {
+    margin-bottom: 1rem;
+  }
+
+  /* Mobile-optimized text sizing */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  /* Mobile dropdown improvements */
+  [data-radix-popper-content-wrapper] {
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* Code block copy button styles */
+  .code-copy-button {
+    top: 4px !important;
+    right: 4px !important;
+    width: 44px !important;
+    height: 44px !important;
+    padding: 8px !important;
+    opacity: 0.5 !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (pointer: coarse) {
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger touch targets for interactive elements */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  /* Better hover states for touch devices */
+  .hover\:bg-gray-100:hover,
+  .hover\:bg-gray-800:hover,
+  .hover\:bg-white\/20:hover,
+  .dark .hover\:bg-gray-700\/50:hover {
+    background-color: transparent;
+  }
+
+  /* Active states for touch feedback */
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+  }
+}
