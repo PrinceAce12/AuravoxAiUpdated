@@ -80,58 +80,72 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
       
       if (webhookUrl && isWebhookConfigured()) {
         console.log('Calling webhook with message:', content);
-        // Try to call the actual webhook
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: content,
-            timestamp: new Date().toISOString(),
-            user_id: 'anonymous' // You can replace this with actual user ID when auth is implemented
-          }),
-        });
-
-        console.log('Webhook response status:', response.status);
-        console.log('Webhook response ok:', response.ok);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Webhook response data:', data);
-          
-          const aiResponseContent = data.output || data.response || data.message || "I received your message but couldn't generate a proper response.";
-          console.log('AI response content:', aiResponseContent);
-          
-          // Clean the AI response before displaying
-          const cleanedContent = cleanAIResponse(aiResponseContent);
-          
-          const aiResponse: Message = {
-            id: `ai-${Date.now()}`,
-            content: cleanedContent,
-            role: 'assistant',
-            created_at: new Date().toISOString()
-          };
-          console.log('AI response object:', aiResponse);
-          
-          setMessages(prev => {
-            console.log('Previous messages:', prev);
-            const newMessages = [...prev, aiResponse];
-            console.log('New messages array:', newMessages);
-            return newMessages;
+        // Try to call the actual webhook with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        try {
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: content,
+              timestamp: new Date().toISOString(),
+              user_id: 'anonymous' // You can replace this with actual user ID when auth is implemented
+            }),
+            signal: controller.signal
           });
           
-          // Save AI response to database if callback provided
-          if (onSaveMessage) {
-            try {
-              await onSaveMessage(aiResponseContent, 'assistant');
-            } catch (error) {
-              console.error('Error saving AI message:', error);
+          clearTimeout(timeoutId);
+
+          console.log('Webhook response status:', response.status);
+          console.log('Webhook response ok:', response.ok);
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Webhook response data:', data);
+            
+            const aiResponseContent = data.output || data.response || data.message || "I received your message but couldn't generate a proper response.";
+            console.log('AI response content:', aiResponseContent);
+            
+            // Clean the AI response before displaying
+            const cleanedContent = cleanAIResponse(aiResponseContent);
+            
+            const aiResponse: Message = {
+              id: `ai-${Date.now()}`,
+              content: cleanedContent,
+              role: 'assistant',
+              created_at: new Date().toISOString()
+            };
+            console.log('AI response object:', aiResponse);
+            
+            setMessages(prev => {
+              console.log('Previous messages:', prev);
+              const newMessages = [...prev, aiResponse];
+              console.log('New messages array:', newMessages);
+              return newMessages;
+            });
+            
+            // Save AI response to database if callback provided
+            if (onSaveMessage) {
+              try {
+                await onSaveMessage(aiResponseContent, 'assistant');
+              } catch (error) {
+                console.error('Error saving AI message:', error);
+              }
             }
+          } else {
+            console.error('Webhook returned error status:', response.status);
+            throw new Error(`Webhook returned status: ${response.status}`);
           }
-        } else {
-          console.error('Webhook returned error status:', response.status);
-          throw new Error(`Webhook returned status: ${response.status}`);
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            throw new Error('Request timeout - no response from AI service');
+          }
+          throw fetchError;
         }
       } else {
         console.log('No webhook configured, using fallback response');
@@ -160,7 +174,23 @@ export const useMessages = (onSaveMessage?: (content: string, role: 'user' | 'as
       }
     } catch (error) {
       console.error('Error getting AI response:', error);
-      const errorMessageContent = "I'm sorry, I'm having trouble responding right now. Please check your internet connection or try again later.";
+      let errorMessageContent = "I'm sorry, I'm having trouble responding right now. Please check your internet connection or try again later.";
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          errorMessageContent = "I'm sorry, the AI service is taking too long to respond. Please try again in a moment.";
+        } else if (error.message.includes('status: 404')) {
+          errorMessageContent = "The AI service endpoint was not found. Please check your webhook configuration.";
+        } else if (error.message.includes('status: 500')) {
+          errorMessageContent = "The AI service is experiencing technical difficulties. Please try again later.";
+        } else if (error.message.includes('status: 401') || error.message.includes('status: 403')) {
+          errorMessageContent = "Authentication failed with the AI service. Please check your API credentials.";
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessageContent = "I'm having trouble connecting right now. Please check your internet connection and try again.";
+        }
+      }
+      
       const cleanedContent = cleanAIResponse(errorMessageContent);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,

@@ -1,0 +1,116 @@
+/* Mobile Chat Layout Styles */
+
+.mobile-chat-layout {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Prevent body scroll when keyboard is visible */
+.mobile-chat-layout.keyboard-visible {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Header styles */
+.mobile-chat-layout header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.3s ease;
+}
+
+.dark .mobile-chat-layout header {
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Message area styles */
+.mobile-chat-layout main {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scroll-behavior: smooth;
+}
+
+/* Input container styles */
+.mobile-chat-layout .input-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.dark .mobile-chat-layout .input-container {
+  background: rgba(17, 24, 39, 0.95);
+  border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+/* Safe area handling for devices with notches */
+@supports (padding: max(0px)) {
+  .mobile-chat-layout header {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  
+  .mobile-chat-layout .input-container {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+.mobile-chat-layout input,
+.mobile-chat-layout textarea {
+  font-size: 16px;
+}
+
+/* Smooth transitions for viewport changes */
+.mobile-chat-layout * {
+  transition: height 0.3s ease, transform 0.3s ease;
+}
+
+/* Debug styles (remove in production) */
+.mobile-chat-layout .debug-info {
+  position: fixed;
+  top: 80px;
+  left: 8px;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 12px;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .mobile-chat-layout {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height */
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mobile-chat-layout header {
+    height: 40px !important;
+  }
+  
+  .mobile-chat-layout .input-container {
+    height: 50px !important;
+  }
+} 

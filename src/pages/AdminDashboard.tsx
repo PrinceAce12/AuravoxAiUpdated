@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Database, Webhook, Shield, LogOut, Save, TestTube, Activity, Wifi, WifiOff, BarChart3, Plus, Trash2 } from 'lucide-react';
+import { Settings, Database as DatabaseIcon, Webhook, Shield, LogOut, Save, TestTube, Activity, Wifi, WifiOff, BarChart3, Plus, Trash2, User, Camera, CameraOff, Check, X, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useMultipleWebhooks } from '@/hooks/useMultipleWebhooks';
 import { useWebhookRealtime } from '@/hooks/useWebhookRealtime';
+import { Switch } from '@/components/ui/switch';
 import AdminMonitoring from './admin/AdminMonitoring';
+
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<'monitoring' | 'settings'>('monitoring');
   const [webhookName, setWebhookName] = useState('');
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  
+
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const { 
@@ -43,6 +48,8 @@ const AdminDashboard = () => {
     loadWebhooks();
   }, [loadWebhooks]);
 
+
+
   const handleAddWebhook = async () => {
     if (!webhookName.trim() || !webhookUrl.trim()) {
       toast({
@@ -64,13 +71,14 @@ const AdminDashboard = () => {
       setWebhookUrl('');
       
       toast({
-        title: "Success",
-        description: "Webhook has been added successfully",
+        title: "Webhook Added",
+        description: "New webhook has been added successfully",
       });
     } catch (error) {
+      console.error('Error adding webhook:', error);
       toast({
         title: "Error",
-        description: "Failed to add webhook",
+        description: "Failed to add webhook. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -190,6 +198,8 @@ const AdminDashboard = () => {
           <AdminMonitoring />
         ) : (
           <div className="grid gap-6">
+
+
             {/* Webhook Configuration */}
             <Card className="glass-card border-0">
               <CardHeader>
@@ -383,7 +393,7 @@ const AdminDashboard = () => {
 
                   <div className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                     <div className="flex items-center space-x-2 mb-2">
-                      <Database className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <DatabaseIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       <span className="font-medium text-purple-900 dark:text-purple-100">Monitored Tables</span>
                     </div>
                     <p className="text-sm text-purple-700 dark:text-purple-300">

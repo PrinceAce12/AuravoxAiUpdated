@@ -48,7 +48,7 @@ const Chat = memo(() => {
   } = useChatHistory(user?.id);
 
   const { messages, addMessage, clearMessages, setMessagesDirectly, isLoading } = useMessages(
-    user && currentConversationId ? saveMessage : undefined
+    user ? saveMessage : undefined
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
@@ -111,20 +111,8 @@ const Chat = memo(() => {
 
   // Force scroll to bottom when user sends a message
   const handleSendMessage = useCallback(async (content: string) => {
-    let conversationId = currentConversationId;
-    // If no current conversation, create one
-    if (!conversationId && user) {
-      const conversation = await createConversation(content.substring(0, 50) + '...');
-      if (conversation) {
-        setCurrentConversationId(conversation.id);
-        conversationId = conversation.id;
-        clearMessages(); // Clear messages for new conversation
-      } else {
-        return; // Could not create conversation
-      }
-    }
-
     // Add message to UI and handle AI response
+    // The saveMessage function will automatically create a conversation if needed
     await addMessage(content);
 
     // Force scroll to bottom immediately after sending
@@ -138,11 +126,11 @@ const Chat = memo(() => {
     }, 150);
 
     // Update conversation title with first message if it's still "New Chat"
-    const currentConv = conversations.find(c => c.id === conversationId);
-    if (conversationId && user && currentConv?.title === 'New Chat') {
-      await updateConversationTitle(conversationId, content.substring(0, 50) + '...');
+    const currentConv = conversations.find(c => c.id === currentConversationId);
+    if (currentConversationId && user && currentConv?.title === 'New Chat') {
+      await updateConversationTitle(currentConversationId, content.substring(0, 50) + '...');
     }
-  }, [currentConversationId, user, createConversation, setCurrentConversationId, addMessage, clearMessages, conversations, updateConversationTitle, scrollToBottom]);
+  }, [currentConversationId, user, addMessage, conversations, updateConversationTitle, scrollToBottom]);
 
   // Handle retrying a user message (move to bottom)
   const handleRetryMessage = useCallback(async (messageId: string) => {
@@ -187,34 +175,47 @@ const Chat = memo(() => {
       return;
     }
 
+    // Clear current messages first
+    clearMessages();
+    
     // If a conversation with title 'New Chat' exists, select it
     const existingNewChat = conversations.find(c => c.title === 'New Chat');
     if (existingNewChat) {
       setCurrentConversationId(existingNewChat.id);
-      clearMessages();
       return;
     }
-    // Only allow new chat if there is at least one message in the current conversation
-    if (!messages || messages.length === 0) return;
-    clearMessages();
+    
+    // Create a new conversation regardless of current message state
     const conversation = await createConversation();
     if (conversation) {
       setCurrentConversationId(conversation.id);
     }
-  }, [conversations, setCurrentConversationId, clearMessages, messages, user, createConversation, setShowAuthModal, setAuthMode]);
+  }, [conversations, setCurrentConversationId, clearMessages, user, createConversation, setShowAuthModal, setAuthMode]);
 
   const handleSelectConversation = useCallback(async (conversationId: string) => {
+    // Clear current messages first to prevent UI flicker
+    clearMessages();
+    
+    // Set the conversation ID
     setCurrentConversationId(conversationId);
-    const conversationMessages = await loadMessages(conversationId);
-    // Convert ChatMessage format to Message format for the UI
-    const uiMessages = conversationMessages.map(msg => ({
-      id: msg.id,
-      content: msg.content,
-      role: msg.role,
-      created_at: msg.created_at
-    }));
-    setMessagesDirectly(uiMessages);
-  }, [setCurrentConversationId, loadMessages, setMessagesDirectly]);
+    
+    // Load messages for the selected conversation
+    try {
+      const conversationMessages = await loadMessages(conversationId);
+      // Convert ChatMessage format to Message format for the UI
+      const uiMessages = conversationMessages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        role: msg.role,
+        created_at: msg.created_at
+      }));
+      setMessagesDirectly(uiMessages);
+    } catch (error) {
+      console.error('Error loading messages for conversation:', conversationId, error);
+      // If loading fails, ensure messages are cleared
+      setMessagesDirectly([]);
+    }
+  }, [setCurrentConversationId, loadMessages, setMessagesDirectly, clearMessages]);
 
   const handleDeleteConversation = useCallback((conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);

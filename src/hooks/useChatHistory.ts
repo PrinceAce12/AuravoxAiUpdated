@@ -93,7 +93,21 @@ export const useChatHistory = (userId?: string) => {
 
   // Save a message to the current conversation
   const saveMessage = useCallback(async (content: string, role: 'user' | 'assistant') => {
-    if (!currentConversationId || !userId) return null;
+    if (!userId) return null;
+    
+    let conversationId = currentConversationId;
+    
+    // If no current conversation, create one
+    if (!conversationId) {
+      const conversation = await createConversation(content.substring(0, 50) + '...');
+      if (conversation) {
+        conversationId = conversation.id;
+        setCurrentConversationId(conversation.id);
+      } else {
+        console.error('Failed to create conversation for message');
+        return null;
+      }
+    }
     
     try {
       const { data, error } = await supabase
@@ -101,7 +115,7 @@ export const useChatHistory = (userId?: string) => {
         .insert({
           content,
           role,
-          conversation_id: currentConversationId,
+          conversation_id: conversationId,
           user_id: userId,
           created_at: new Date().toISOString(),
         })
@@ -114,7 +128,7 @@ export const useChatHistory = (userId?: string) => {
       console.error('Error saving message:', error);
       return null;
     }
-  }, [currentConversationId, userId]);
+  }, [currentConversationId, userId, createConversation, setCurrentConversationId]);
 
   // Update conversation title
   const updateConversationTitle = useCallback(async (conversationId: string, title: string) => {

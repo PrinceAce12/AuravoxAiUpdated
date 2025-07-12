@@ -240,6 +240,7 @@ export type Database = {
           }
         ]
       }
+
     }
     Views: {
       current_webhook: {
