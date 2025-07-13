@@ -1,17 +1,22 @@
 {
   "name": "q0",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "NODE_ENV=production vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "backend": "node server.js",
     "start-backend": "node start-backend.js",
-    "vercel-build": "vite build"
+    "vercel-build": "vite build",
+    "type-check": "tsc --noEmit",
+    "build-and-preview": "npm run build && npm run preview",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
