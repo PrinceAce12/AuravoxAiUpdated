@@ -1,12 +1,8 @@
 import React, { useState, useCallback, memo, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, Loader2, Mic, MicOff } from 'lucide-react';
-import { useSimpleVoiceRecognition } from '@/hooks/useSimpleVoiceRecognition';
-import { useBraveVoiceRecognition } from '@/hooks/useBraveVoiceRecognition';
-import { VoiceFallbackModal } from '@/components/VoiceFallbackModal';
-import { VoiceChatOverlay } from '@/components/VoiceChatOverlay';
-import { BraveVoiceHelper } from '@/components/BraveVoiceHelper';
+import { Send, Loader2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -38,62 +34,8 @@ export interface ChatInputRef {
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessage, disabled, user, onShowAuthModal, isLoading = false, placeholder = "Type your message...", messages = [], onFocus, onBlur }, ref) => {
   const [message, setMessage] = useState('');
-  const [showFallbackModal, setShowFallbackModal] = useState(false);
-  const [isVoiceButtonDisabled, setIsVoiceButtonDisabled] = useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
-  // Detect Brave browser
-  const isBrave = navigator.userAgent.includes('Brave');
-  
-  // Use Brave-specific voice recognition if Brave browser detected
-  const simpleVoiceRecognition = useSimpleVoiceRecognition({
-    onResult: (finalTranscript) => {
-      // Auto-send the message after voice recognition
-      if (finalTranscript.trim() && user && !disabled) {
-        onSendMessage(finalTranscript.trim());
-        setMessage(''); // Clear the input field
-      }
-    },
-    onError: (errorMessage) => {
-      // Only show error toast for non-development errors
-      if (!errorMessage.includes('development environment')) {
-        toast.error(errorMessage);
-      }
-    },
-    onStart: () => {
-      // Silent start - no notification
-    },
-    onEnd: () => {
-      // Silent end - no notification
-    }
-  });
-
-  const braveVoiceRecognition = useBraveVoiceRecognition({
-    onResult: (finalTranscript) => {
-      // Auto-send the message after voice recognition
-      if (finalTranscript.trim() && user && !disabled) {
-        onSendMessage(finalTranscript.trim());
-        setMessage(''); // Clear the input field
-      }
-    },
-    onError: (errorMessage) => {
-      // Only show error toast for non-development errors
-      if (!errorMessage.includes('development environment')) {
-        toast.error(errorMessage);
-      }
-    },
-    onStart: () => {
-      // Silent start - no notification
-    },
-    onEnd: () => {
-      // Silent end - no notification
-    }
-  });
-
-  // Use appropriate voice recognition based on browser
-  const voiceRecognition = isBrave ? braveVoiceRecognition : simpleVoiceRecognition;
-  const { isListening, isSupported, startListening, stopListening, reset, transcript, error } = voiceRecognition;
-  const method = isBrave ? braveVoiceRecognition.method : null;
+  const navigate = useNavigate();
 
   // Detect mobile device - more comprehensive detection
   const [isMobile, setIsMobile] = useState(false);
@@ -215,35 +157,6 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
     }
   }, [isMobile]);
 
-  const handleVoiceToggle = useCallback(() => {
-    // Prevent rapid clicks
-    if (isVoiceButtonDisabled) {
-      return;
-    }
-
-    if (!user) {
-      onShowAuthModal?.();
-      return;
-    }
-
-    if (!isSupported) {
-      setShowFallbackModal(true);
-      return;
-    }
-
-    // Disable button temporarily to prevent rapid clicks
-    setIsVoiceButtonDisabled(true);
-    setTimeout(() => setIsVoiceButtonDisabled(false), 2000);
-
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  }, [isSupported, isListening, user, startListening, stopListening, onShowAuthModal, isVoiceButtonDisabled]);
-
-
-
   return (
     <>
     <form
@@ -274,63 +187,37 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
         />
       </div>
       
-      {/* Voice button - circular with hover effect */}
-      <Button
-        type="button"
-        onClick={handleVoiceToggle}
-        disabled={disabled || isVoiceButtonDisabled}
-        className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 touch-manipulation transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-          isListening 
-            ? 'bg-red-500 hover:bg-red-600 text-white' 
-            : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-        }`}
-        title={isListening ? 'Stop voice input' : 'Start voice input'}
-      >
-        {isListening ? (
-          <MicOff className="w-5 h-5 sm:w-6 sm:h-6" />
-        ) : (
-          <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
-        )}
-      </Button>
-      
-      <Button
-        type="submit"
-        disabled={isButtonDisabled}
-        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg px-2.5 sm:px-4 py-2 h-10 sm:h-12 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 touch-manipulation text-base sm:text-lg"
-      >
-        {disabled ? (
-          <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
-        ) : (
-          <Send className="w-5 h-5 sm:w-6 sm:h-6" />
-        )}
-              </Button>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Orb Conversation Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-full p-2 h-10 w-10 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30"
+          aria-label="Open Voice Orb Conversation"
+          onClick={() => {
+            if (!user) {
+              onShowAuthModal?.();
+            } else {
+              navigate('/voice-orb');
+            }
+          }}
+        >
+          <Circle className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+        </Button>
+        {/* Send Button */}
+        <Button
+          type="submit"
+          disabled={isButtonDisabled}
+          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg px-2.5 sm:px-4 py-2 h-10 sm:h-12 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 touch-manipulation text-base sm:text-lg"
+        >
+          {disabled ? (
+            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5 sm:w-6 sm:h-6" />
+          )}
+        </Button>
+      </div>
     </form>
-    
-    {/* Voice chat overlay */}
-    <VoiceChatOverlay
-      isListening={isListening}
-      onStop={stopListening}
-      transcript={transcript}
-    />
-    
-    {/* Fallback modal for unsupported browsers */}
-    <VoiceFallbackModal
-      isOpen={showFallbackModal}
-      onClose={() => setShowFallbackModal(false)}
-      onSendMessage={onSendMessage}
-      user={user}
-    />
-    
-    {/* Brave-specific voice helper */}
-    <BraveVoiceHelper
-      isListening={isListening}
-      onStartListening={startListening}
-      onStopListening={stopListening}
-      error={error}
-      method={method}
-      onShowManualInput={() => setShowFallbackModal(true)}
-      transcript={transcript}
-    />
     
     <p className="text-xs sm:text-sm text-gray-500 mt-0 text-center px-3 sm:px-4 mb-16 sm:mb-0 hidden sm:block">
       Q0 can make mistakes, so please check the information you receive.

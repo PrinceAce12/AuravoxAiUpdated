@@ -15,7 +15,9 @@ import UserSettings from './pages/UserSettings';
 import AuthCallback from './pages/AuthCallback';
 import QRScanner from './components/QRScanner';
 import WebhookDemo from './pages/WebhookDemo';
-import { VoiceTest } from './components/VoiceTest';
+import VoiceChat from './pages/VoiceChat';
+import VoiceOrbConversation from './pages/VoiceOrbConversation';
+import SpeechTest from './pages/SpeechTest';
 
 const queryClient = new QueryClient();
 
@@ -48,7 +50,9 @@ const App = () => (
               <Route path="/welcome" element={<Index />} />
               <Route path="/settings" element={<UserSettings />} />
               <Route path="/webhook-demo" element={<WebhookDemo />} />
-              <Route path="/voice-test" element={<VoiceTest />} />
+              <Route path="/voice-chat" element={<VoiceChat />} />
+              <Route path="/voice-orb" element={<VoiceOrbConversation />} />
+              <Route path="/speech-test" element={<SpeechTest />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

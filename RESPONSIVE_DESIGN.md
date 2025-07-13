@@ -253,7 +253,7 @@ className="px-2 sm:px-3 py-1 sm:py-2"
 ### **Accessibility Testing**
 - **Screen Readers**: NVDA, JAWS, VoiceOver
 - **Keyboard Navigation**: Full keyboard accessibility
-- **High Contrast**: Visual accessibility
+- **High Contrast**: Support for high contrast modes
 - **Reduced Motion**: Motion sensitivity
 
 ## 📊 **Performance Metrics**
@@ -316,7 +316,6 @@ const ResponsiveComponent = memo(() => {
 
 ### **Planned Improvements**
 - **Gesture Support**: Swipe navigation
-- **Voice Input**: Speech-to-text on mobile
 - **Offline Support**: Progressive Web App features
 - **Advanced Animations**: Lottie animations for better UX
 

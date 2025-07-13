@@ -51,9 +51,11 @@ interface ChatLayoutProps {
   onArchiveConversation?: (id: string) => void;
   onDeleteConversation?: (id: string) => void;
   onProfileUpdate?: () => void;
+  ttsSettings?: React.ReactNode;
+  voiceConversationButton?: React.ReactNode;
 }
 
-export default function ChatLayout({ children, onNewChat, onSignIn, user, onSignOut, conversations = [], onSelectConversation, selectedConversationId, onSidebarStateChange, onShareConversation, onRenameConversation, onArchiveConversation, onDeleteConversation, onProfileUpdate }: ChatLayoutProps) {
+export default function ChatLayout({ children, onNewChat, onSignIn, user, onSignOut, conversations = [], onSelectConversation, selectedConversationId, onSidebarStateChange, onShareConversation, onRenameConversation, onArchiveConversation, onDeleteConversation, onProfileUpdate, ttsSettings, voiceConversationButton }: ChatLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toggleHover, setToggleHover] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -398,6 +400,18 @@ export default function ChatLayout({ children, onNewChat, onSignIn, user, onSign
           </div>
           <div className="flex-1" />
           <div className="flex items-center space-x-1 sm:space-x-3">
+            {/* TTS Settings */}
+            {ttsSettings && (
+              <div className="flex items-center">
+                {ttsSettings}
+              </div>
+            )}
+            {/* Voice Conversation Button */}
+            {voiceConversationButton && (
+              <div className="flex items-center">
+                {voiceConversationButton}
+              </div>
+            )}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

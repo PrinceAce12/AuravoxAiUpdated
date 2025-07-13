@@ -269,7 +269,6 @@ The application meets all specified requirements for performance, security, usab
 - Implement advanced caching strategies
 
 **Feature Additions:**
-- Voice input and speech-to-text functionality
 - File upload and document sharing
 - Multi-language internationalization
 - Advanced analytics and reporting

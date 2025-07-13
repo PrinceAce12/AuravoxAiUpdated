@@ -7,9 +7,15 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthService } from '@/lib/auth';
 import ChatLayout from '../components/ChatLayout';
+import { Mic } from 'lucide-react';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useMessages } from '../hooks/useMessages';
 import { useUserProfile } from '../hooks/useUserProfile';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
+import { useSpeechToText } from '../hooks/useSpeechToText';
+
+import { VoiceConversation } from '../components/chat/VoiceConversation';
+import { cleanTextForSpeech, shouldSpeakText, extractSpeechText } from '../lib/speechUtils';
 
 interface User {
   id: string;
@@ -52,6 +58,29 @@ const Chat = memo(() => {
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
+
+  // Text-to-Speech functionality
+  const {
+    isSupported: ttsSupported,
+    isSpeaking,
+    isMuted,
+    availableVoices,
+    selectedVoice,
+    speak,
+    stop,
+    toggleMute,
+    setVoice,
+    setRate,
+    setPitch,
+    setVolume,
+  } = useTextToSpeech();
+
+  // TTS Settings state
+  const [readFullResponse, setReadFullResponse] = useState(true);
+
+  // Voice conversation state
+  const [showVoiceConversation, setShowVoiceConversation] = useState(false);
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
@@ -108,6 +137,22 @@ const Chat = memo(() => {
       }
     }
   }, [messages, scrollToBottom]);
+
+  // Auto-speak assistant messages
+  useEffect(() => {
+    if (!ttsSupported || isMuted) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant' && shouldSpeakText(lastMessage.content)) {
+      const speechText = extractSpeechText(lastMessage.content, readFullResponse);
+      if (speechText.trim()) {
+        // Add a small delay to let the typewriter animation start
+        setTimeout(() => {
+          speak(speechText, { readFullResponse });
+        }, 500);
+      }
+    }
+  }, [messages, ttsSupported, isMuted, speak, readFullResponse]);
 
   // Force scroll to bottom when user sends a message
   const handleSendMessage = useCallback(async (content: string) => {
@@ -348,6 +393,53 @@ const Chat = memo(() => {
     if (error) setAuthError(error.message);
   };
 
+  // Voice conversation state management
+  const [voiceConversationId, setVoiceConversationId] = useState<string | null>(null);
+
+  // Handle voice conversation start
+  const handleVoiceConversationStart = useCallback(() => {
+    if (!user) {
+      setShowAuthModal(true);
+      setAuthMode('sign-in');
+      return;
+    }
+
+    // If no current conversation, create one for voice chat
+    if (!currentConversationId) {
+      createConversation('Voice Conversation').then((conversation) => {
+        if (conversation) {
+          setVoiceConversationId(conversation.id);
+          setCurrentConversationId(conversation.id);
+        }
+      });
+    } else {
+      // Use existing conversation for voice chat
+      setVoiceConversationId(currentConversationId);
+    }
+
+    setShowVoiceConversation(true);
+  }, [user, currentConversationId, createConversation, setCurrentConversationId, setShowAuthModal, setAuthMode]);
+
+  // Handle voice conversation close
+  const handleVoiceConversationClose = useCallback(() => {
+    setShowVoiceConversation(false);
+    setIsVoiceListening(false);
+    // Don't clear the conversation ID - keep the conversation active
+    setVoiceConversationId(null);
+  }, []);
+
+  // Handle voice message sending - ensures it stays in the same conversation
+  const handleVoiceMessage = useCallback(async (message: string) => {
+    if (!user) return;
+    
+    try {
+      // Use the existing message sending logic which will use the current conversation
+      await handleSendMessage(message);
+    } catch (error) {
+      console.error('Error sending voice message:', error);
+    }
+  }, [user, handleSendMessage]);
+
   return (
     <ChatLayout
       onNewChat={handleNewChat}
@@ -570,6 +662,20 @@ const Chat = memo(() => {
                     Let's have a chat!
                   </div>
                 )}
+                
+                {/* Voice conversation indicator */}
+                {showVoiceConversation && (
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg border border-blue-200/50 dark:border-blue-500/20">
+                    <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                      <Mic className="w-4 h-4 animate-pulse" />
+                      <span className="text-sm font-medium">Voice conversation active</span>
+                    </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Voice messages will be added to this conversation. Close the voice interface to end the session.
+                    </p>
+                  </div>
+                )}
+                
                 <MessageList 
                   messages={messages} 
                   isLoading={isLoading}
@@ -592,6 +698,16 @@ const Chat = memo(() => {
           </div>
         </div>
       </div>
+
+      {/* Voice Conversation Modal */}
+      {showVoiceConversation && (
+        <VoiceConversation
+          onSendMessage={handleSendMessage}
+          isListening={isVoiceListening}
+          onToggleListening={() => setIsVoiceListening(!isVoiceListening)}
+          onClose={handleVoiceConversationClose}
+        />
+      )}
     </ChatLayout>
   );
 });
